@@ -1,9 +1,3 @@
-**Membres du groupe:** 
-- Victor Durand
-- Tristan Chretien
-- Loïc VERNIERE
-- Raphaël RABECHAULT
-
 # Elements réalisés
 
 Etape 1 : Formulaire de création fonctionne parfaitement ainsi que le fetch et l'api 

@@ -1,8 +1,3 @@
-**Membres du groupe:** 
-- Victor Durand
-- Tristan Chretien
-- Loïc VERNIERE
-- Raphaël RABECHAULT
 
 # Elements réalisés
 
