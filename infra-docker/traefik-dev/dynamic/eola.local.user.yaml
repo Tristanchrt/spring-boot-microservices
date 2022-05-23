@@ -1,0 +1,34 @@
+http:
+  routers:
+    http-user-router: 
+      rule: "Host(`eola.local`) && PathPrefix(`/user`)"
+      service : user-service
+      middlewares:
+      - cors-header
+      - auth-middleware
+
+    internal-http-user-router: 
+      rule: "Host(`internal.eola.local`) && (PathPrefix(`/user`) ||  PathPrefix(`/users`)) && !Method(`OPTIONS`)"
+      service : user-service
+      middlewares:
+      - cors-header
+
+
+  middlewares:
+    cors-header:
+      headers:
+        customResponseHeaders:
+         Access-Control-Allow-Origin : "*"
+    auth-middleware:
+      forwardAuth:
+        address: "http://eola.local/auth/current"
+
+  services:
+    # Define how to reach an existing service on our infrastructure
+    user-service:
+      loadBalancer:
+        servers:
+        - url: http://localhost:8083
+
+
+

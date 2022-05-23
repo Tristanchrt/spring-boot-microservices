@@ -1,0 +1,246 @@
+version: '3.7'
+
+services:
+
+  front-card:
+    image: registry.gitlab.com/a10241/cards-react:latest
+    container_name: front-card
+    restart: unless-stopped
+    labels:
+        - traefik.enable=true
+        - "traefik.docker.network=net_common"
+        - "traefik.http.routers.front-https.rule=Host(`front.eola.local`)"
+        - "traefik.http.routers.front-https.service=front-service"
+        - "traefik.http.services.front-service.loadbalancer.server.port=80"
+    depends_on:
+      - traefik
+    networks:
+      - net_common
+
+  auth-service: 
+    image: registry.gitlab.com/a10241/auth-springboot:latest
+    restart: unless-stopped
+    labels:
+        - traefik.enable=true
+        - "traefik.http.routers.auth-https.rule=Host(`eola.local`) && PathPrefix(`/auth`)"
+        - "traefik.http.routers.auth-https.service=auth-service"
+        - "traefik.http.routers.auth-https.middlewares=cors-header"
+        - "traefik.http.services.auth-service.loadbalancer.server.port=8082"
+
+        - "traefik.http.routers.internal-auth-https.rule=Host(`internal.eola.local`) && PathPrefix(`/auth`) && !Method(`OPTIONS`)"
+        - "traefik.http.routers.internal-auth-https.service=auth-service"
+        - "traefik.http.routers.internal-auth-https.middlewares=cors-header"
+        
+        
+
+    environment:
+      - MYSQL_HOST=bdd-auth
+      - MYSQL_PORT=3306
+    depends_on:
+      - traefik
+      - bdd-auth
+    networks:
+      - net_auth
+      - net_common
+
+  card-service: 
+    image: registry.gitlab.com/a10241/card-springboot:latest
+    restart: unless-stopped
+    labels:
+        - traefik.enable=true
+        - "traefik.http.routers.card-https.rule=Host(`eola.local`) && (PathPrefix(`/card`) || PathPrefix(`/cards`)) && !Method(`OPTIONS`)"
+        - "traefik.http.routers.card-https.service=card-service"
+        - "traefik.http.routers.card-https.middlewares=auth-middleware,cors-header"
+        - "traefik.http.services.card-service.loadbalancer.server.port=8084"
+
+        - "traefik.http.routers.internal-card-https.rule=Host(`internal.eola.local`)  && (PathPrefix(`/card`) || PathPrefix(`/cards`)) && !Method(`OPTIONS`)"
+        - "traefik.http.routers.internal-card-https.service=card-service"
+        - "traefik.http.routers.internal-card-https.middlewares=cors-header"
+    environment:
+      - MYSQL_HOST=bdd-card
+      - MYSQL_PORT=3306
+    depends_on:
+      - traefik
+      - bdd-card
+    networks:
+      - net_card
+      - net_common
+    
+  transaction-service: 
+    image: registry.gitlab.com/a10241/transaction-springboot:latest
+    restart: unless-stopped
+    labels:
+        - traefik.enable=true
+        - "traefik.http.routers.transaction-https.rule=Host(`eola.local`) && (PathPrefix(`/transaction`) ||  PathPrefix(`/transactions`)) && !Method(`OPTIONS`)"
+        - "traefik.http.routers.transaction-https.service=transaction-service"
+        - "traefik.http.routers.transaction-https.middlewares=auth-middleware,cors-header"
+        - "traefik.http.services.transaction-service.loadbalancer.server.port=8085"
+
+        - "traefik.http.routers.internal-transaction-https.rule=Host(`internal.eola.local`) && (PathPrefix(`/transaction`) ||  PathPrefix(`/transactions`)) && !Method(`OPTIONS`)"
+        - "traefik.http.routers.internal-transaction-https.service=transaction-service"
+        - "traefik.http.routers.internal-transaction-https.middlewares=cors-header"
+    environment:
+      - MYSQL_HOST=bdd-transaction
+      - MYSQL_PORT=3306
+    depends_on:
+      - traefik
+      - bdd-transaction
+    networks:
+      - net_transaction
+      - net_common
+
+  user-service: 
+    image: registry.gitlab.com/a10241/user-springboot:latest
+    restart: unless-stopped
+    labels:
+        - traefik.enable=true
+        - "traefik.http.routers.user-https.rule=Host(`eola.local`) && (PathPrefix(`/user`) ||  PathPrefix(`/users`)) && !Method(`OPTIONS`)"
+        - "traefik.http.routers.user-https.service=user-service"
+        - "traefik.http.routers.user-https.middlewares=auth-middleware,cors-header"
+        - "traefik.http.services.user-service.loadbalancer.server.port=8083"
+
+        - "traefik.http.routers.internal-user-https.rule=Host(`internal.eola.local`) && (PathPrefix(`/user`) ||  PathPrefix(`/users`)) && !Method(`OPTIONS`)"
+        - "traefik.http.routers.internal-user-https.service=user-service"
+        - "traefik.http.routers.internal-user-https.middlewares=cors-header"
+    environment:
+      - MYSQL_HOST=bdd-user
+      - MYSQL_PORT=3306
+    depends_on:
+      - traefik
+      - bdd-user
+    networks:
+      - net_user
+      - net_common
+
+  game-service: 
+    image: registry.gitlab.com/a10241/game-springboot:latest
+    restart: unless-stopped
+    labels:
+        - traefik.enable=true
+        - "traefik.http.routers.game-https.rule=Host(`eola.local`) && (PathPrefix(`/game`) ||  PathPrefix(`/games`)) && !Method(`OPTIONS`)"
+        - "traefik.http.routers.game-https.service=game-service"
+        - "traefik.http.routers.game-https.middlewares=cors-header"
+        - "traefik.http.routers.game-https.middlewares=auth-middleware"
+        - "traefik.http.services.game-service.loadbalancer.server.port=8086"
+
+        - "traefik.http.routers.internal-game-https.rule=Host(`internal.eola.local`) && (PathPrefix(`/game`) ||  PathPrefix(`/games`)) && !Method(`OPTIONS`)"
+        - "traefik.http.routers.internal-game-https.service=game-service"
+    environment:
+      - MYSQL_HOST=bdd-game
+      - MYSQL_PORT=3306
+    depends_on:
+      - traefik
+    networks:
+      - net_game
+      - net_common
+
+
+  bdd-auth:
+    image: mysql:latest
+    container_name: db_auth
+    restart: always
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    volumes:
+      - vol_database_auth:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: auth
+      MYSQL_USER: user
+      MYSQL_PASSWORD: root
+    security_opt:
+      - seccomp:unconfined
+    networks:
+      - net_auth
+  
+  bdd-card:
+    image: mysql:latest
+    container_name: db_card
+    restart: always
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    volumes:
+      - vol_database_card:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: card
+      MYSQL_USER: user
+      MYSQL_PASSWORD: root
+    security_opt:
+      - seccomp:unconfined
+    networks:
+      - net_card
+
+  bdd-transaction:
+    image: mysql:latest
+    container_name: db_transaction
+    restart: always
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    volumes:
+      - vol_database_transaction:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: transaction
+      MYSQL_USER: user
+      MYSQL_PASSWORD: root
+    security_opt:
+      - seccomp:unconfined
+    networks:
+      - net_transaction
+  
+  bdd-user:
+    image: mysql:latest
+    container_name: db_user
+    restart: always
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    volumes:
+      - vol_database_user:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: user
+      MYSQL_USER: user
+      MYSQL_PASSWORD: root
+    security_opt:
+      - seccomp:unconfined
+    networks:
+      - net_user
+
+  traefik:
+    image: traefik
+    restart: unless-stopped
+    ports:
+       - 80:80
+       - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ../traefik/traefik.yaml:/etc/traefik/traefik.yaml
+      - ./acme.json:/etc/traefik/acme.json
+    labels:
+      -  "traefik.http.middlewares.auth-middleware.forwardauth.address=http://auth-service:8082/auth/current"
+      -  "traefik.http.middlewares.auth-middleware.forwardauth.authRequestHeaders=Authorization"
+      -  "traefik.http.middlewares.auth-middleware.forwardauth.authResponseHeaders=X-Auth-User,Authorization"
+      -  "traefik.http.middlewares.cors-header.headers.customResponseHeaders.Access-Control-Allow-Origin=http://front.eola.local"
+      -  "traefik.http.middlewares.replace-health.replacepath.path=/auth/healthcheck"
+
+      -  "traefik.http.routers.preflight-router.rule=Host(`eola.local`) &&  Method(`OPTIONS`)"
+      -  "traefik.http.routers.preflight-router.middlewares=replace-health@docker"
+      # -  "traefik.http.routers.preflight-router.middlewares=cors-header"
+      -  "traefik.http.routers.preflight-router.service=auth-service"
+      
+    networks:
+      net_common:
+        aliases:
+        - "internal.eola.local"
+
+volumes:
+  vol_database_auth: {}
+  vol_database_card: {}
+  vol_database_transaction: {}
+  vol_database_user: {}
+  vol_database_game: {}
+
+networks:
+  net_auth: {}
+  net_card: {}
+  net_transaction: {}
+  net_user: {}
+  net_game: {}
+  net_common: {}

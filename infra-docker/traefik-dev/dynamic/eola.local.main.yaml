@@ -1,0 +1,29 @@
+http:
+  routers:
+    http-auth-router: 
+      rule: "Host(`eola.local`)"
+      service : main-server
+      # middlewares:
+      # - cors-header
+
+    # internal-http-auth-router: 
+    #   rule: "Host(`internal.eola.local`) && !Method(`OPTIONS`)"
+    #   service : main-server
+      # middlewares:
+      # - cors-header
+
+  # middlewares:
+  #   cors-header:
+  #     headers:
+  #       customResponseHeaders:
+  #        Access-Control-Allow-Origin : "*"
+
+  services:
+    # Define how to reach an existing service on our infrastructure
+    main-server:
+      loadBalancer:
+        servers:
+        - url: http://localhost:8000
+
+
+

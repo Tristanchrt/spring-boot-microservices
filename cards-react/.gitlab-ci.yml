@@ -1,0 +1,63 @@
+variables:
+  IMAGENAME: "registry.gitlab.com/a10241/${CI_PROJECT_NAME}"
+  GIT_DEPTH: 0
+
+stages:
+  - build
+  - docker
+  - deploy
+
+services:
+  - docker:dind
+
+build:
+  stage: build
+  image: node:14
+  script:
+    - echo "Building deploy package"
+    - npm i
+    - npm run build
+    - echo "Build successful"
+  artifacts:
+    expire_in: 1 hour
+    paths:
+        - build
+
+build-docker-image:
+  stage: docker
+  image: docker:latest
+  script:
+    - docker login registry.gitlab.com -u ${USER} -p ${ACCESS_TOKEN}
+    - docker build -t ${IMAGENAME}:latest -f Dockerfile .
+    - docker push ${IMAGENAME}:latest
+    - docker image rm ${IMAGENAME}:latest
+
+
+
+deploy: 
+  stage: deploy
+  script:
+    - echo "test"
+
+
+    
+# test-back: &test_stage
+#   stage: test
+#   script:
+#     - mvn test
+
+# dependencies_check:
+#   <<: *test_stage
+#   script:
+#     - mvn site
+#   artifacts:
+#     paths:
+#       - target/site
+
+# deploy-back:
+#   image:
+#     name: bitnami/kubectl
+#     entrypoint: [""]
+#   stage: deploy-back
+#   script:
+

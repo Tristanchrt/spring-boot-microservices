@@ -1,0 +1,20 @@
+version: '3.7'
+services:
+
+  traefik:
+    image: traefik
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yaml:/etc/traefik/traefik.yaml
+      - ./acme.json:/etc/traefil/acme.json
+    networks:
+      - web
+  
+networks:
+  web:
+    external:
+      name: web

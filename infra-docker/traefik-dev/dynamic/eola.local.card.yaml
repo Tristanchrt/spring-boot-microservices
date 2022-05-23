@@ -1,0 +1,48 @@
+http:
+  routers:
+    http-card-router:
+      rule: "Host(`eola.local`) && (PathPrefix(`/card`) || PathPrefix(`/cards`)) && !Method(`OPTIONS`)"
+      service : card-service
+      middlewares:
+      - cors-header
+      - auth-middleware
+
+      
+    internal-http-card-router: 
+      rule: "Host(`internal.eola.local`) && (PathPrefix(`/card`) ||  PathPrefix(`/cards`)) && !Method(`OPTIONS`)"
+      service : card-service
+      middlewares:
+      - cors-header
+      
+    preflight-router:
+      rule: "Host(`eola.local`) &&  Method(`OPTIONS`)"
+      service : auth-service
+      middlewares:
+       - replacepath
+       - cors-header
+
+  middlewares:
+    cors-header:
+      headers:
+        customResponseHeaders:
+         Access-Control-Allow-Origin : "*"
+    auth-middleware:
+      forwardAuth:
+        address: "http://eola.local/auth/current"
+        authRequestHeaders:
+          - "Authorization"
+        authResponseHeaders:
+          - "X-Auth-User"
+    replacepath:
+      replacePath:
+        path: "/auth/healthcheck"
+
+
+  services:
+    card-service:
+      loadBalancer:
+        servers:
+        - url: http://tristan.pc:8084
+
+
+ 

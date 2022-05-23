@@ -1,0 +1,11 @@
+export {default as CreateRoomPage} from "./CreateRoomPage";
+export {default as LoginPage} from "./LoginPage";
+export {default as HomePage} from "./HomePage";
+export {default as ProfilPage} from "./ProfilPage";
+export {default as RegisterPage} from "./RegisterPage";
+export {default as ShopPage} from "./ShopPage";
+export {default as RoomPage} from "./RoomPage";
+export {default as WaitingRoom} from "./WaitingRoom";
+export {default as EndGameRoom} from "./EndGameRoom";
+export {default as GamePrepare} from "./GamePrepare";
+export {default as BattlePage} from "./BattlePage";

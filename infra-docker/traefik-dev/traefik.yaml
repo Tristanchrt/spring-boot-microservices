@@ -1,0 +1,38 @@
+entryPoints:
+  web:
+    # Listen on port 8081 for incoming requests
+    address: :80
+    # http:
+    #   redirections:
+    #     entryPoint:
+    #       to: websecure
+    #       scheme: https
+ 
+  websecure:
+    address: :443
+
+
+providers:
+  file:
+    directory: /etc/traefik/dynamic
+
+api:
+  dashboard: false
+
+
+certificatesResolvers:
+  lets-encrypt:
+    acme:
+      email: contact@victordurand.fr
+      storage: acme.json
+      caServer: https://acme-v02.api.letsencrypt.org/directory
+      httpChallenge:
+        # used during the challenge
+        entryPoint: web
+  lets-encrypt-local:
+    acme:
+      email: contact@victordurand.fr
+      storage: acme-local.json
+      httpChallenge:
+        # used during the challenge
+        entryPoint: web

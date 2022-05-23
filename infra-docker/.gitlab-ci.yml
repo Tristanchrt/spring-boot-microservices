@@ -1,0 +1,40 @@
+---
+variables:
+  IMAGENAME: "registry.gitlab.com/a10241/${S"
+  GIT_DEPTH: 0
+
+stages:
+  - docker
+
+image: openjdk:8-jdk-alpine
+
+build-docker-image:
+  stage: docker
+  image: docker
+  script:
+    - docker build -t ${SERVICE}:latest -f Dockerfile .
+    - docker login registry.gitlab.com -u ${GITLAB_USER} -p ${GITLAB_TOKEN}
+    - docker push ${SERVICE}:latest
+    - docker image rm ${SERVICE}:latest
+
+    
+# test-back: &test_stage
+#   stage: test
+#   script:
+#     - mvn test
+
+# dependencies_check:
+#   <<: *test_stage
+#   script:
+#     - mvn site
+#   artifacts:
+#     paths:
+#       - target/site
+
+# deploy-back:
+#   image:
+#     name: bitnami/kubectl
+#     entrypoint: [""]
+#   stage: deploy-back
+#   script:
+
